@@ -37,12 +37,17 @@ def process_message(m):
         match_iter = re.finditer(r'CVE-\d{4}-\d{4,7}', m)
         for match in islice(match_iter, 4):
             cve = match.group(0)
-            req = requests.get("https://cve.circl.lu/api/cve/{}".format(cve))
-            print(req.text)
+            url = "https://cve.mitre.org/cgi-bin/cvename.cgi?name={}".format(cve)
+            req = {}
+            try:
+                req = requests.get("https://cve.circl.lu/api/cve/{}".format(cve), timeout=1)
+            except requests.exceptions.Timeout:
+                summary = "Request timed out"
+                response.append({"fallback": "{}: {} ({})".format(cve, summary, url), "color": "danger", "title": "{}: {}".format(cve, summary), "title_link": url})
+                continue
             if req.status_code == 200:
                 try:
                     summary = req.json()['summary']
-                    url = "https://cve.mitre.org/cgi-bin/cvename.cgi?name={}".format(cve)
                     response.append({"fallback": "{}: {} ({})".format(cve, summary, url), "color": "danger", "title": "{}: {}".format(cve, summary), "title_link": url})
                 except Exception as e:
                     print(e)
