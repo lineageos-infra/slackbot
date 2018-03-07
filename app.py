@@ -34,15 +34,11 @@ def handle_message(event_data):
         return
 
     response, attachments = process_message(event['text'])
-    print(response, attachments)
     if response and attachments:
-        print("botH")
         client.api_call('chat.postMessage', channel=event['channel'], text=response, attachments=attachments)
     elif response:
-        print("1")
         client.api_call('chat.postMessage', channel=event['channel'], text=response)
     elif attachments:
-        print("2")
         client.api_call('chat.postMessage', channel=event['channel'], attachments=attachments)
 
 @events_adapter.server.before_first_request
