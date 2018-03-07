@@ -1,10 +1,19 @@
 import re
 
+import requests
+
+from itertools import islice
 from .utils.gerrit import GerritChangeFetcher
 
 gerrit_url = 'https://review.lineageos.org/'
 
 def process_message(m):
+    if m.startswith('!'):
+        #Command mode!
+        if m[1:].startswith("vend"):
+            req = requests.get('https://itvends.com/vend.php')
+            if req.status_code == 200:
+                return 'It vends {}!'.format(req.text[:-1]), None
     if re.search(gerrit_url.replace('.', r'\.'), m):
         number = 0
         response = []
@@ -20,8 +29,23 @@ def process_message(m):
                 elif topic:
                     response.append(GerritChangeFetcher.get_topic(topic.group(1)))
         return None, response
-
-
-    if re.search(r'.*FOOBAR.*', m):
-        return 'FOOBAR!', None
+    if re.search(r'karma', m, re.IGNORECASE):
+        return 'BOT HAS PIMPED VARIOUS KARMA', None
+    if re.search(r'CVE-\d{4}-\d{4,7}', m):
+        '''Grab CVEs from cve.cirl.lu'''
+        response = []
+        match_iter = re.finditer(r'CVE-\d{4}-\d{4,7}', m)
+        for match in islice(match_iter, 4):
+            cve = match.group(0)
+            req = requests.get("https://cve.circl.lu/api/cve/{}".format(cve))
+            print(req.text)
+            if req.status_code == 200:
+                try:
+                    summary = req.json()['summary']
+                    url = "https://cve.mitre.org/cgi-bin/cvename.cgi?name={}".format(cve)
+                    response.append({"fallback": "{}: {} ({})".format(cve, summary, url), "color": "danger", "title": "{}: {}".format(cve, summary), "title_link": url})
+                except Exception as e:
+                    print(e)
+                    pass
+        return None, response
     return None, None
