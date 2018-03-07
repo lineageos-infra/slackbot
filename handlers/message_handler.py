@@ -24,3 +24,4 @@ def process_message(m):
 
     if re.search(r'.*FOOBAR.*', m):
         return 'FOOBAR!', None
+    return None, None
