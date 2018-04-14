@@ -7,6 +7,8 @@ import os
 import jinja2
 import json
 
+from concurrent.futures import ThreadPoolExecutor
+
 from flask import make_response, render_template
 from slackclient import SlackClient
 from slackeventsapi import SlackEventAdapter
@@ -19,7 +21,7 @@ client_secret = os.environ.get("CLIENT_SECRET")
 verification = os.environ.get("VERIFICATION_TOKEN")
 token=""
 
-client = SlackClient("")
+client = None #SlackClient("")
 events_adapter = SlackEventAdapter(verification, "/events") 
 template_loader = jinja2.ChoiceLoader([
                     events_adapter.server.jinja_loader,
@@ -27,19 +29,14 @@ template_loader = jinja2.ChoiceLoader([
                   ])
 events_adapter.server.jinja_loader = template_loader
 
+executor = ThreadPoolExecutor(max_workers=4)
+
 @events_adapter.on("message")
 def handle_message(event_data):
     event = event_data['event']
     if 'bot_id' in event or 'text' not in event:
         return
-
-    response, attachments = process_message(event['text'])
-    if response and attachments:
-        client.api_call('chat.postMessage', channel=event['channel'], text=response, attachments=attachments)
-    elif response:
-        client.api_call('chat.postMessage', channel=event['channel'], text=response)
-    elif attachments:
-        client.api_call('chat.postMessage', channel=event['channel'], attachments=attachments)
+    executor.submit(process_message, event, client)
 
 @events_adapter.server.before_first_request
 def before_first_request():
