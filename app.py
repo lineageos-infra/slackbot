@@ -6,6 +6,7 @@ requests between our bot and Slack.
 import os
 import jinja2
 import json
+import time
 
 from concurrent.futures import ThreadPoolExecutor
 
@@ -14,6 +15,11 @@ from slackclient import SlackClient
 from slackeventsapi import SlackEventAdapter
 
 from handlers import process_message
+
+from plugins import Reddit
+
+from log import setup_custom_logger
+logger = setup_custom_logger('root')
 
 # Load client_id/client_secret
 client_id = os.environ.get("CLIENT_ID")
@@ -58,5 +64,10 @@ if __name__ == '__main__':
     debug = False
     if 'DEBUG' in os.environ:
         debug = True
-    events_adapter.start(debug=debug, port=9040)
+    executor.submit(events_adapter.start, debug=debug, port=9040)
 
+    reddit = Reddit(client)
+
+    executor.submit(reddit.loop)
+    while True:
+        time.sleep(60)
