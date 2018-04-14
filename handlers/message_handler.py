@@ -50,7 +50,7 @@ def process_message(event, client):
                 url = "https://cve.mitre.org/cgi-bin/cvename.cgi?name={}".format(cve)
                 req = {}
                 try:
-                    req = requests.get("https://cve.circl.lu/api/cve/{}".format(cve), timeout=1)
+                    req = requests.get("https://cve.circl.lu/api/cve/{}".format(cve))
                 except requests.exceptions.Timeout:
                     summary = "Request timed out"
                     attachments.append({"fallback": "{}: {} ({})".format(cve, summary, url), "color": "danger", "title": "{}: {}".format(cve, summary), "title_link": url})
