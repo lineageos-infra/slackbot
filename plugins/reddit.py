@@ -25,7 +25,14 @@ class Reddit(Plugin):
                 for post in r.subreddit('lineageos').new(limit=10):
                     if post.id in self.done:
                         continue
-                    self.client.api_call('chat.postMessage', channel='C62RNKJTZ', text=post.url, unfurl_links=True)
+                    attachment = {
+                        'fallback': post.url,
+                        'pretext': 'reddit',
+                        'title': post.title,
+                        'title_link': post.url,
+                        'text': post.selftext[:140] if hasattr(post, 'selftext') else ''
+                    }
+                    self.client.api_call('chat.postMessage', channel='C62RNKJTZ', attachments=[attachment], unfurl_links=True)
                     self.done.append(post.id)
                     DataStore.save(self.plugin, 'done', self.done)
             except Exception as e:
