@@ -33,7 +33,7 @@ def process_message(event, client):
                         break
                     number += 1
                     topic = re.search(r'(?:topic:)(.+?(?:(?=[%\s+]|$|>)))',word)
-                    change = re.search(r'(?:' + gerrit_url.replace('.', r'\.') + ')(?:(?:#\/c\/)|)(?:LineageOS\/[a-zA-Z_0-9\-]*\/\+\/)([0-9]{4,7})',word)
+                    change = re.search(gerrit_url.replace('.', r'\.') + '(?:(?:#\/)?c\/(?:LineageOS\/[a-zA-Z_0-9\-]*\/\+\/)?)?([0-9]+)',word)
                     if change:
                         attachments.append(GerritChangeFetcher.get_change(change.group(1)))
                     elif topic:
